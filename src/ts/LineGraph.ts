@@ -34,7 +34,12 @@ export function gridLines(
         .style("opacity", 0.05)
 }
 
-export function renderLineChart(svg: SVGElement, values: number[], label = "Value") {
+export function renderLineChart(
+    svg: SVGElement,
+    values: number[],
+    label = "Value",
+    dayOffset = 0
+) {
     if (!svg) {
         return
     }
@@ -51,7 +56,7 @@ export function renderLineChart(svg: SVGElement, values: number[], label = "Valu
         .slice(start_index)
         .map((v, i) => ({
             value: v ?? 0,
-            date: new Date((start_index + i) * day_ms),
+            date: new Date((dayOffset + start_index + i) * day_ms),
         }))
 
     const xMin = d3.min(date_values.map((d) => d.date))!

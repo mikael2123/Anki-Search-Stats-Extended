@@ -51,6 +51,8 @@ include-re-introduced = Include re-introduced
 include-filtered = Include Filtered
 bar-width = Bar Width
 scroll = Scroll
+start = Start
+end = End
 as-ratio = As Ratio
 
 loading = Loading...

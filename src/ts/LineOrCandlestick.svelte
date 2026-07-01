@@ -9,7 +9,7 @@
     import GraphTypeSelector from "./GraphTypeSelector.svelte"
     import { i18n } from "./i18n"
     import LineGraph from "./LineGraph.svelte"
-    import { binSize, scroll, searchLimit } from "./stores"
+    import { binSize, lineEnd, lineStart, scroll, searchLimit } from "./stores"
     import type { TrendLine } from "./trend"
 
     let type = "total"
@@ -35,6 +35,11 @@
     data = Array.from(data)
 
     $: processed_data = cumulative ? mapIndividualToCumulativeData(data) : data
+
+    $: total_end_index = $lineEnd > 0 ? processed_data.length - $lineEnd : processed_data.length
+    $: total_start_index =
+        $lineStart > 0 ? Math.max(0, processed_data.length - $lineStart) : 0
+    $: total_data = processed_data.slice(total_start_index, total_end_index)
 
     let candlestick_data: CandlestickGraph
     $: if (processed_data)
@@ -67,7 +72,17 @@
 </GraphTypeSelector>
 
 {#if type === "total"}
-    <LineGraph data={processed_data} {label} />
+    <div class="options">
+        <label>
+            {i18n("start")}
+            <input type="number" bind:value={$lineStart} />
+        </label>
+        <label>
+            {i18n("end")}
+            <input type="number" bind:value={$lineEnd} />
+        </label>
+    </div>
+    <LineGraph data={total_data} {label} dayOffset={total_start_index} />
 {:else}
     <Candlestick
         data={candlestick_data}
@@ -78,3 +93,21 @@
         bind:offset={$scroll}
     />
 {/if}
+
+<style>
+    div.options {
+        display: grid;
+        grid-template-columns: auto 1fr auto 1fr;
+        grid-template-areas: "a a b b";
+        gap: 0.5em;
+        align-items: baseline;
+    }
+
+    div.options label {
+        display: contents;
+    }
+
+    div.options input {
+        min-width: 5em;
+    }
+</style>

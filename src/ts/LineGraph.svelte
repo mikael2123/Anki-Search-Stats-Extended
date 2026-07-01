@@ -5,9 +5,10 @@
 
     export let label: string
     export let data: number[]
+    export let dayOffset = 0
 
     $: if (svg) {
-        renderLineChart(svg, data, label)
+        renderLineChart(svg, data, label, dayOffset)
     }
 </script>
 
