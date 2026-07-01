@@ -64,9 +64,10 @@ export function renderLineChart(
 
     const x = d3.scaleTime().domain([xMin, xMax]).range([0, width])
 
-    const yMax = d3.max(values) || 0
+    const yMax = d3.max(date_values, (d) => d.value) ?? 0
+    const yMin = d3.min(date_values, (d) => d.value) ?? 0
 
-    const y = d3.scaleLinear().domain([yMax, 0]).range([0, height]).nice()
+    const y = d3.scaleLinear().domain([yMax, yMin]).range([0, height]).nice()
 
     const axis = d3
         .select(svg)
