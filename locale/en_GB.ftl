@@ -59,6 +59,8 @@ loading = Loading...
 
 total = Total
 trend = Trend
+bars = Bars
+area = Area
 
 percent-correct = {$percentage}% Correct
 

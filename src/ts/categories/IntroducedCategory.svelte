@@ -1,12 +1,15 @@
 <script lang="ts">
     import RevlogGraphContainer from "../RevlogGraphContainer.svelte"
     import BarScrollable from "../BarScrollable.svelte"
+    import BarOrArea from "../BarOrArea.svelte"
+    import DownloadButton from "../DownloadButton.svelte"
     import GraphCategory from "../GraphCategory.svelte"
     import Warning from "../Warning.svelte"
     import { i18n, i18n_pattern } from "../i18n"
     import { barDateLabeler, type BarChart, type BarDatum } from "../bar"
     import { binSize, scroll, searchLimit, revlogStats } from "../stores"
     import { today, easeBarChart } from "../revlogGraphs"
+    import { dayIndexToISO } from "../csvExport"
     import _ from "lodash"
     import { browserSearchCurrent } from "../search"
 
@@ -35,6 +38,23 @@
         columnLabeler: barDateLabeler,
     }
 
+    // Full arrays indexed by absolute day (index i == day i) for the area chart & CSV.
+    $: introduced_full = Array.from($revlogStats?.introduced_day_count ?? [], (v) => v ?? 0)
+    $: reintroduced_full = Array.from($revlogStats?.reintroduced_day_count ?? [], (v) => v ?? 0)
+    $: introduced_new = introduced_full.map((v, i) => v - (reintroduced_full[i] ?? 0))
+
+    function introducedRows() {
+        const first = introduced_full.findIndex((v) => v)
+        const start = first === -1 ? 0 : first
+        const out: (string | number)[][] = []
+        for (let i = start; i < introduced_full.length; i++) {
+            const total = introduced_full[i] ?? 0
+            const reintro = reintroduced_full[i] ?? 0
+            out.push([dayIndexToISO(i), total, total - reintro, reintro])
+        }
+        return out
+    }
+
     $: forgotten_bar = {
         row_colours: ["#330900"],
         row_labels: [i18n("forgotten")],
@@ -59,14 +79,21 @@
 <GraphCategory hidden_title={i18n("introduced")} config_name="introduced">
     <RevlogGraphContainer>
         <h1 slot="title">{i18n("introduced")}</h1>
-        <BarScrollable
+        <DownloadButton
+            slot="corner"
+            filename="introduced.csv"
+            headers={["date", "total introduced", "introduced", "re-introduced"]}
+            rows={introducedRows}
+        />
+        <BarOrArea
             slot="graph"
-            data={introduced_bar}
+            bar_data={introduced_bar}
             {bins}
-            bind:binSize={$binSize}
-            bind:offset={$scroll}
             {limit}
             search={introducedSearch}
+            series={[introduced_new, reintroduced_full]}
+            labels={introduced_bar.row_labels}
+            colours={introduced_bar.row_colours}
         />
         <p>
             {i18n("introduced-help")}
