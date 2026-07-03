@@ -54,12 +54,14 @@
 
 <div class="options">
     <label>
-        {i18n("start")}
+        <span>{i18n("start")}</span>
         <input type="number" bind:value={$lineStart} />
+        <span class="unit">{i18n("days-ago")}</span>
     </label>
     <label>
-        {i18n("end")}
+        <span>{i18n("end")}</span>
         <input type="number" bind:value={$lineEnd} />
+        <span class="unit">{i18n("days-ago")}</span>
     </label>
 </div>
 
@@ -78,19 +80,22 @@
 
 <style>
     div.options {
-        display: grid;
-        grid-template-columns: auto 1fr auto 1fr;
-        grid-template-areas: "a a b b";
-        gap: 0.5em;
+        display: flex;
+        justify-content: center;
         align-items: baseline;
+        gap: 1.5em;
+        margin: 0.5em;
     }
 
     div.options label {
-        display: contents;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.35em;
+        white-space: nowrap;
     }
 
     div.options input {
-        min-width: 5em;
+        width: 4.5em;
     }
 
     div.toggles {
