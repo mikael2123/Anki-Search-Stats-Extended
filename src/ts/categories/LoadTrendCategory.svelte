@@ -27,8 +27,10 @@
     }
 
     let introduced_load_cumulative_mode = false
+    let card_load_cumulative_mode = false
     let burden_trend: TrendLine
     let introduced_load_trend: TrendLine
+    let card_load_trend: TrendLine
 
     $: learn_repetitions = ($revlogStats?.learn_steps_per_card ?? []).reduce(
         (learn_repetitions, count) => {
@@ -94,6 +96,29 @@
                 {i18n("introduced-load-truncated-warning")}
             </Warning>
         {/if}
+    </RevlogGraphContainer>
+    <RevlogGraphContainer>
+        <h1 slot="title">{i18n("load-by-card")}</h1>
+        <LineOrCandlestick
+            slot="graph"
+            data={$revlogStats?.card_load_by_introduction ?? []}
+            xMode="index"
+            label={card_load_cumulative_mode ? i18n("cumulative-load") : i18n("load")}
+            bind:trend_data={card_load_trend}
+            cumulative={card_load_cumulative_mode}
+        />
+        <label>
+            <input type="checkbox" bind:checked={card_load_cumulative_mode} />
+            {i18n("cumulative-mode")}
+        </label>
+        <p>
+            {i18n("load-by-card-help")}
+        </p>
+        <TrendValue
+            trend={card_load_trend}
+            n={$binSize}
+            info={{ pattern: i18n_pattern("load-by-card-per-card") }}
+        />
     </RevlogGraphContainer>
     <RevlogGraphContainer>
         <h1 slot="title">{i18n("learn-reviews-per-card")}</h1>

@@ -333,13 +333,20 @@ export function calculateRevlogStats(
     intervals = intervals.map((day) => Array.from(day ?? []).map((a) => a ?? 0))
 
     // Calculate current load by introduction day
+    const card_loads: { id: number; load: number; intro_day: number }[] = []
     for (const card of cardData) {
         const intro_day = card_introduction_day[card.id]
         if (intro_day !== undefined && card.ivl > 0 && card.queue !== -1) {
             const load = 1 / card.ivl
             introduced_load_by_day[intro_day] = (introduced_load_by_day[intro_day] ?? 0) + load
+            card_loads.push({ id: card.id, load, intro_day })
         }
     }
+
+    // Per-card load ordered by introduction (index 0 = first introduced card).
+    const card_load_by_introduction = card_loads
+        .sort((a, b) => a.intro_day - b.intro_day || a.id - b.id)
+        .map((c) => c.load)
 
     for (const card_time of Object.values(card_times)) {
         const key = Math.floor(card_time / 1000)
@@ -371,6 +378,7 @@ export function calculateRevlogStats(
         revlog_times,
         introduced_day_count,
         introduced_load_by_day,
+        card_load_by_introduction,
         reintroduced_day_count,
         burden,
         day_forgotten,

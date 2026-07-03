@@ -9,7 +9,7 @@
     import GraphTypeSelector from "./GraphTypeSelector.svelte"
     import { i18n } from "./i18n"
     import LineGraph from "./LineGraph.svelte"
-    import { binSize, lineEnd, lineStart, scroll, searchLimit } from "./stores"
+    import { binSize, cardEnd, cardStart, lineEnd, lineStart, scroll, searchLimit } from "./stores"
     import type { TrendLine } from "./trend"
 
     let type = "total"
@@ -18,6 +18,8 @@
     export let up_colour = CANDLESTICK_GREEN
     export let down_colour = CANDLESTICK_RED
     export let cumulative = false
+    // "date": x-axis is calendar days (default). "index": x-axis is card order.
+    export let xMode: "date" | "index" = "date"
 
     let bins = 30
 
@@ -36,9 +38,28 @@
 
     $: processed_data = cumulative ? mapIndividualToCumulativeData(data) : data
 
-    $: total_end_index = $lineEnd > 0 ? processed_data.length - $lineEnd : processed_data.length
-    $: total_start_index = $lineStart > 0 ? Math.max(0, processed_data.length - $lineStart) : 0
-    $: total_data = processed_data.slice(total_start_index, total_end_index)
+    // Date mode: start/end count days back from today. Index mode: absolute
+    // 1-based card numbers.
+    $: total_start_index =
+        xMode === "index"
+            ? $cardStart > 0
+                ? Math.min($cardStart - 1, processed_data.length)
+                : 0
+            : $lineStart > 0
+              ? Math.max(0, processed_data.length - $lineStart)
+              : 0
+    $: total_end_index =
+        xMode === "index"
+            ? $cardEnd > 0
+                ? Math.min($cardEnd, processed_data.length)
+                : processed_data.length
+            : $lineEnd > 0
+              ? processed_data.length - $lineEnd
+              : processed_data.length
+    $: total_data = processed_data.slice(
+        total_start_index,
+        Math.max(total_start_index, total_end_index)
+    )
 
     let candlestick_data: CandlestickGraph
     $: if (processed_data)
@@ -53,6 +74,7 @@
             tick_spacing: 5,
             up_colour,
             down_colour,
+            index_labels: xMode === "index",
         }
 
     export let trend_data: TrendLine
@@ -72,16 +94,31 @@
 
 {#if type === "total"}
     <div class="options">
-        <label>
-            {i18n("start")}
-            <input type="number" bind:value={$lineStart} />
-        </label>
-        <label>
-            {i18n("end")}
-            <input type="number" bind:value={$lineEnd} />
-        </label>
+        {#if xMode === "index"}
+            <label>
+                <span>{i18n("start")}</span>
+                <input type="number" bind:value={$cardStart} />
+                <span class="unit hug">{i18n("th-card")}</span>
+            </label>
+            <label>
+                <span>{i18n("end")}</span>
+                <input type="number" bind:value={$cardEnd} />
+                <span class="unit hug">{i18n("th-card")}</span>
+            </label>
+        {:else}
+            <label>
+                <span>{i18n("start")}</span>
+                <input type="number" bind:value={$lineStart} />
+                <span class="unit">{i18n("days-ago")}</span>
+            </label>
+            <label>
+                <span>{i18n("end")}</span>
+                <input type="number" bind:value={$lineEnd} />
+                <span class="unit">{i18n("days-ago")}</span>
+            </label>
+        {/if}
     </div>
-    <LineGraph data={total_data} {label} dayOffset={total_start_index} />
+    <LineGraph data={total_data} {label} dayOffset={total_start_index} {xMode} />
 {:else}
     <Candlestick
         data={candlestick_data}
@@ -95,18 +132,26 @@
 
 <style>
     div.options {
-        display: grid;
-        grid-template-columns: auto 1fr auto 1fr;
-        grid-template-areas: "a a b b";
-        gap: 0.5em;
+        display: flex;
+        justify-content: center;
         align-items: baseline;
+        gap: 1.5em;
+        margin: 0.5em;
     }
 
     div.options label {
-        display: contents;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.35em;
+        white-space: nowrap;
     }
 
     div.options input {
-        min-width: 5em;
+        width: 4.5em;
+    }
+
+    /* Cancel the flex gap so the unit hugs the number, e.g. "500th card". */
+    div.options .unit.hug {
+        margin-left: -0.35em;
     }
 </style>

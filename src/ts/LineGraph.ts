@@ -1,5 +1,6 @@
 import * as d3 from "d3"
 import { clearChart, defaultGraphBounds } from "./graph"
+import { i18n } from "./i18n"
 import { day_ms } from "./revlogGraphs"
 import { tooltip, tooltipShown } from "./stores"
 import { tooltipX } from "./tooltip"
@@ -34,7 +35,13 @@ export function gridLines(
         .style("opacity", 0.05)
 }
 
-export function renderLineChart(svg: SVGElement, values: number[], label = "Value", dayOffset = 0) {
+export function renderLineChart(
+    svg: SVGElement,
+    values: number[],
+    label = "Value",
+    dayOffset = 0,
+    xMode: "date" | "index" = "date"
+) {
     if (!svg) {
         return
     }
@@ -42,25 +49,39 @@ export function renderLineChart(svg: SVGElement, values: number[], label = "Valu
     clearChart(svg)
     const { width, height } = defaultGraphBounds()
 
-    type Point = { value: number; date: Date }
+    const isIndex = xMode === "index"
+
+    type Point = { value: number; xv: number }
 
     const first_non_zero_index = values.findIndex((v) => v)
     const start_index = first_non_zero_index === -1 ? 0 : first_non_zero_index
 
-    const date_values = Array.from(values)
+    // xv is a generic x-domain value: a day number (date mode) or a 0-based
+    // card index (index mode).
+    const points: Point[] = Array.from(values)
         .slice(start_index)
         .map((v, i) => ({
             value: v ?? 0,
-            date: new Date((dayOffset + start_index + i) * day_ms),
+            xv: dayOffset + start_index + i,
         }))
 
-    const xMin = d3.min(date_values.map((d) => d.date))!
-    const xMax = d3.max(date_values.map((d) => d.date))!
+    const toDate = (xv: number) => new Date(xv * day_ms)
 
-    const x = d3.scaleTime().domain([xMin, xMax]).range([0, width])
+    const xMinN = d3.min(points, (d) => d.xv) ?? 0
+    const xMaxN = d3.max(points, (d) => d.xv) ?? 0
 
-    const yMax = d3.max(date_values, (d) => d.value) ?? 0
-    const yMin = d3.min(date_values, (d) => d.value) ?? 0
+    const x: any = isIndex
+        ? d3.scaleLinear().domain([xMinN, xMaxN]).range([0, width])
+        : d3
+              .scaleTime()
+              .domain([toDate(xMinN), toDate(xMaxN)])
+              .range([0, width])
+
+    // Pixel position for a point (index mode uses the raw number, date mode a Date).
+    const xPix = (d: Point) => x(isIndex ? d.xv : toDate(d.xv))
+
+    const yMax = d3.max(points, (d) => d.value) ?? 0
+    const yMin = d3.min(points, (d) => d.value) ?? 0
 
     const y = d3.scaleLinear().domain([yMax, yMin]).range([0, height]).nice()
 
@@ -69,18 +90,28 @@ export function renderLineChart(svg: SVGElement, values: number[], label = "Valu
         .attr("viewBox", `-40 -10 ${width + 50} ${height + 50}`)
         .append("g")
 
-    gridLines(axis, x.ticks(7).map(x), y.ticks().map(y))
+    gridLines(
+        axis,
+        x.ticks(7).map((t: any) => x(t)),
+        y.ticks().map(y)
+    )
 
     axis.append("g").call(d3.axisLeft(y)).attr("opacity", 0.5)
 
+    const bottomAxis = isIndex
+        ? d3
+              .axisBottom(x)
+              .ticks(7)
+              .tickFormat((d: any) => `${+d + 1}`)
+        : d3.axisBottom(x).ticks(7)
     axis.append("g")
         .attr("transform", `translate(0, ${height})`)
         .attr("opacity", 0.5)
-        .call(d3.axisBottom(x).ticks(7))
+        .call(bottomAxis as any)
 
     d3.select(svg)
         .append("path")
-        .datum(date_values)
+        .datum(points)
         .attr("fill", "none")
         .attr("stroke", "steelblue")
         .attr("stroke-width", 1.5)
@@ -89,26 +120,29 @@ export function renderLineChart(svg: SVGElement, values: number[], label = "Valu
             "d",
             d3
                 .line<Point>()
-                .x((d) => x(d.date))
+                .x((d) => xPix(d))
                 .y((d) => y(d.value))
         )
 
-    const bar_width = width / date_values.length + 1
+    const bar_width = width / points.length + 1
     axis.append("g")
         .selectAll("g")
-        .data(date_values.filter((a) => a))
+        .data(points.filter((a) => a))
         .join("rect")
         .attr("class", "hover-bar")
         .attr("height", height)
         .attr("width", (_, i) => (i > 0 ? bar_width : bar_width / 2))
-        .attr("x", (d, i) => x(d.date)! - (i > 0 ? bar_width / 2 : 0))
+        .attr("x", (d, i) => xPix(d) - (i > 0 ? bar_width / 2 : 0))
         .attr("y", 0)
         .on("mouseover", (e: MouseEvent, d) => {
             const value_string = d.value > 10 ? d.value.toFixed(0) : d.value.toPrecision(2)
+            const x_string = isIndex
+                ? i18n("card-number", { number: d.xv + 1 })
+                : toDate(d.xv).toLocaleDateString()
             tooltip.set({
                 x: tooltipX(e),
                 y: e.pageY,
-                text: [`${d.date.toLocaleDateString()}:`, `${label}: ${value_string}`],
+                text: [`${x_string}:`, `${label}: ${value_string}`],
             })
         })
 

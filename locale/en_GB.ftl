@@ -53,6 +53,8 @@ bar-width = Bar Width
 scroll = Scroll
 start = Start
 end = End
+days-ago = days ago
+th-card = th card
 as-ratio = As Ratio
 
 loading = Loading...
@@ -249,6 +251,10 @@ introduced-load-help =
 introduced-load-truncated-warning =
     Introduced load does not work for cards introduced before the cutoff date.
 
+load-by-card = Load by Card Introduction
+load-by-card-help =
+    This graph shows each card's current load (1 / current interval) plotted in the order the cards were introduced. The first introduced card is at the left, the most recent at the right. Unlike "Load by Introduction Day", each point is a single card, so you can compare how hard individual cards are regardless of how many were introduced on any given day. In cumulative mode, each point shows the total accumulated load from the first card up to that card.
+
 forgotten = Reset
 forgotten-help = You "reset" a card when you manually mark it as new.
 forgotten-truncated-warning = Does not work for cards introduced before the cutoff date.
@@ -265,6 +271,8 @@ load-trend-help =
 
 x-change = Change: {$val}
 x-total = Total: {$val}
+card-number = Card {$number}
+card-range = Cards {$start}–{$end}
 
 learn-reviews-per-card = Learn Reviews per Card
 learn-reviews-per-card-help = The number of reviews it took before the card left the learning phase (graduated). Doesn't count reviews before a card reset.
@@ -404,6 +412,10 @@ burden-per-day = {$value} burden per {$n ->
 introduced-load-per-day = {$value} introduced load per {$n ->
         [one] day
         *[many] {$n} days
+    }
+load-by-card-per-card = {$value} load per {$n ->
+        [one] card
+        *[many] {$n} cards
     }
 stability-per-day = {$value} stability per {$n ->
         [one] day

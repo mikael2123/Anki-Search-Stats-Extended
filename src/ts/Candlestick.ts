@@ -23,6 +23,7 @@ export type CandlestickGraph = {
     bar_width?: number
     up_colour?: string
     down_colour?: string
+    index_labels?: boolean
 }
 
 export const CANDLESTICK_GREEN = "green"
@@ -69,12 +70,15 @@ export function plotCandlestick(
         .on("mouseover", (e, d) => {
             const delta = (d.end - d.begin) * (d.positive ? 1 : -1)
             const final = d.positive ? d.end : d.begin
-            const date = tooltipDate(+d.label, graph.bar_width ?? 1)
+            const bar_width = graph.bar_width ?? 1
+            const heading = graph.index_labels
+                ? cardRangeLabel(+d.label, bar_width)
+                : tooltipDate(+d.label, bar_width)
 
             tooltipShown.set(true)
             tooltip.set({
                 text: [
-                    `${date}:`,
+                    `${heading}:`,
                     i18n("x-change", { val: delta.toFixed(2) }),
                     i18n("x-total", { val: final.toFixed(2) }),
                 ],
@@ -87,6 +91,14 @@ export function plotCandlestick(
         })
 
     return { x, y, svg: axis, maxValue: max, chart: graph }
+}
+
+// label is a 0-based card index; display 1-based, as a range when binned.
+function cardRangeLabel(label: number, width: number) {
+    const start = label + 1
+    return width > 1
+        ? i18n("card-range", { start, end: label + width })
+        : i18n("card-number", { number: start })
 }
 
 export function DeltaIfy(arr: number[]) {
