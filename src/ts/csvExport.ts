@@ -23,7 +23,13 @@ export async function downloadCsv(
     await saveCsv(filename, toCsv(headers, rows))
 }
 
-// Absolute day index -> stable YYYY-MM-DD, matching the tooltipDate day convention.
+// Absolute day index -> local YYYY-MM-DD, matching the tooltipDate day
+// convention. Uses local date parts (not toISOString, which is UTC and would
+// shift the date by a day for users behind UTC).
 export function dayIndexToISO(i: number): string {
-    return new Date(Date.now() + day_ms * (i - today)).toISOString().slice(0, 10)
+    const d = new Date(Date.now() + day_ms * (i - today))
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, "0")
+    const day = String(d.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}`
 }
