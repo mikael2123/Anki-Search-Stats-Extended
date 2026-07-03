@@ -34,6 +34,7 @@
         flex-direction: column;
         align-content: center;
         overflow: hidden;
+        position: relative;
     }
 
     .graph :global(p) {

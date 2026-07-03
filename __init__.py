@@ -7,6 +7,7 @@ from pathlib import Path
 import orjson
 from anki.hooks import wrap
 from aqt import QDesktopServices, QUrl, mw
+from aqt.qt import QFileDialog
 from aqt.stats import NewDeckStats
 
 addon_dir = Path(os.path.dirname(__file__))
@@ -165,3 +166,24 @@ def open_locale_folder():
 
 
 post_handlers["openLocaleFolder"] = open_locale_folder
+
+
+def save_csv():
+    req = orjson.loads(request.data)
+    filename = req.get("filename", "export.csv")
+    content = req.get("content", "")
+
+    # post_handlers run off the GUI thread; the file dialog must run on main.
+    def do_save():
+        path, _ = QFileDialog.getSaveFileName(
+            mw, "Save CSV", filename, "CSV Files (*.csv);;All Files (*)"
+        )
+        if path:
+            with open(path, "w", encoding="utf-8", newline="") as f:
+                f.write(content)
+
+    mw.taskman.run_on_main(do_save)
+    return Response(orjson.dumps({"queued": True}))
+
+
+post_handlers["saveCsv"] = save_csv

@@ -183,6 +183,10 @@ export async function saveConfigValue(key: string, value: any) {
     await endpoint("writeConfig", JSON.stringify({ key, value }))
 }
 
+export async function saveCsv(filename: string, content: string) {
+    await endpoint("saveCsv", JSON.stringify({ filename, content }))
+}
+
 export async function getRevlogs(cids: number[], day_range: number) {
     const response = (await endpoint("revlogs", JSON.stringify({ cids, day_range }))) as {
         columns?: string[]

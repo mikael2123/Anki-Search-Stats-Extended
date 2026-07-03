@@ -5,13 +5,26 @@
     import Warning from "../Warning.svelte"
     import LineOrCandlestick from "../LineOrCandlestick.svelte"
     import TrendValue from "../TrendValue.svelte"
+    import DownloadButton from "../DownloadButton.svelte"
     import { i18n, i18n_pattern } from "../i18n"
     import { CANDLESTICK_GREEN, CANDLESTICK_RED } from "../Candlestick"
     import type { TrendLine } from "../trend"
     import { binSize, searchLimit, revlogStats } from "../stores"
+    import { dayIndexToISO } from "../csvExport"
     import * as d3 from "d3"
 
     $: truncated = $searchLimit !== 0
+
+    function loadRows() {
+        const burden = Array.from($revlogStats?.burden ?? [], (v) => v ?? 0)
+        const first = burden.findIndex((v) => v)
+        const start = first === -1 ? 0 : first
+        const out: (string | number)[][] = []
+        for (let i = start; i < burden.length; i++) {
+            out.push([dayIndexToISO(i), burden[i] ?? 0])
+        }
+        return out
+    }
 
     let introduced_load_cumulative_mode = false
     let burden_trend: TrendLine
@@ -29,6 +42,12 @@
 <GraphCategory hidden_title={i18n("load-trend")} config_name="load">
     <RevlogGraphContainer>
         <h1 slot="title">{i18n("load-trend")}</h1>
+        <DownloadButton
+            slot="corner"
+            filename="load.csv"
+            headers={["date", "load"]}
+            rows={loadRows}
+        />
         <LineOrCandlestick
             slot="graph"
             data={$revlogStats?.burden ?? []}
