@@ -37,8 +37,7 @@
     $: processed_data = cumulative ? mapIndividualToCumulativeData(data) : data
 
     $: total_end_index = $lineEnd > 0 ? processed_data.length - $lineEnd : processed_data.length
-    $: total_start_index =
-        $lineStart > 0 ? Math.max(0, processed_data.length - $lineStart) : 0
+    $: total_start_index = $lineStart > 0 ? Math.max(0, processed_data.length - $lineStart) : 0
     $: total_data = processed_data.slice(total_start_index, total_end_index)
 
     let candlestick_data: CandlestickGraph

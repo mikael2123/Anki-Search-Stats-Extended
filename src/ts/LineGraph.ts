@@ -34,12 +34,7 @@ export function gridLines(
         .style("opacity", 0.05)
 }
 
-export function renderLineChart(
-    svg: SVGElement,
-    values: number[],
-    label = "Value",
-    dayOffset = 0
-) {
+export function renderLineChart(svg: SVGElement, values: number[], label = "Value", dayOffset = 0) {
     if (!svg) {
         return
     }
