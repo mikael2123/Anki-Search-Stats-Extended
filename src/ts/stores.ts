@@ -89,6 +89,8 @@ export let lineStart = writable(0)
 export let lineEnd = writable(0)
 export let cardStart = writable(0)
 export let cardEnd = writable(0)
+export let cardBinSize = writable(1)
+export let cardScroll = writable(0)
 
 //Tooltip related stores
 export let tooltip = writable<Tooltip>({

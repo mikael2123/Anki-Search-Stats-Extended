@@ -9,7 +9,7 @@
     import { i18n, i18n_pattern } from "../i18n"
     import { CANDLESTICK_GREEN, CANDLESTICK_RED } from "../Candlestick"
     import type { TrendLine } from "../trend"
-    import { binSize, searchLimit, revlogStats } from "../stores"
+    import { binSize, cardBinSize, cardScroll, searchLimit, revlogStats } from "../stores"
     import { dayIndexToISO } from "../csvExport"
     import * as d3 from "d3"
 
@@ -106,6 +106,8 @@
             label={card_load_cumulative_mode ? i18n("cumulative-load") : i18n("load")}
             bind:trend_data={card_load_trend}
             cumulative={card_load_cumulative_mode}
+            binSizeStore={cardBinSize}
+            scrollStore={cardScroll}
         />
         <label>
             <input type="checkbox" bind:checked={card_load_cumulative_mode} />
@@ -116,7 +118,7 @@
         </p>
         <TrendValue
             trend={card_load_trend}
-            n={$binSize}
+            n={$cardBinSize}
             info={{ pattern: i18n_pattern("load-by-card-per-card") }}
         />
     </RevlogGraphContainer>

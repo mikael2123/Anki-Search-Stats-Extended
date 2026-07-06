@@ -10,6 +10,7 @@
     import { i18n } from "./i18n"
     import LineGraph from "./LineGraph.svelte"
     import { binSize, cardEnd, cardStart, lineEnd, lineStart, scroll, searchLimit } from "./stores"
+    import type { Writable } from "svelte/store"
     import type { TrendLine } from "./trend"
 
     let type = "total"
@@ -20,6 +21,10 @@
     export let cumulative = false
     // "date": x-axis is calendar days (default). "index": x-axis is card order.
     export let xMode: "date" | "index" = "date"
+    // Which stores back the Bar Width / Scroll controls. Default to the shared
+    // globals; a graph with a different unit (e.g. card order) can pass its own.
+    export let binSizeStore: Writable<number> = binSize
+    export let scrollStore: Writable<number> = scroll
 
     let bins = 30
 
@@ -65,8 +70,9 @@
     $: if (processed_data)
         candlestick_data = {
             start:
-                processed_data[processed_data.length - bins * $binSize - Math.abs($scroll) - 1] ||
-                0,
+                processed_data[
+                    processed_data.length - bins * $binSizeStore - Math.abs($scrollStore) - 1
+                ] || 0,
             data: Array.from(DeltaIfy(processed_data)).map((delta, i) => ({
                 label: i.toString(),
                 delta,
@@ -123,10 +129,10 @@
     <Candlestick
         data={candlestick_data}
         bind:bins
-        bind:binSize={$binSize}
+        bind:binSize={$binSizeStore}
         {limit}
         bind:trend_data
-        bind:offset={$scroll}
+        bind:offset={$scrollStore}
     />
 {/if}
 
